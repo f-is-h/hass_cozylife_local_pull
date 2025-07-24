@@ -81,13 +81,13 @@ class CozyLifeSwitch(SwitchEntity):
         self._attr_is_on = False
         self._available = False
         self._last_update = 0
-        self._update_interval = 30  # 30秒更新间隔，避免频繁查询
+        self._update_interval = 30  # 30 second update interval to avoid frequent queries
         self._refresh_state()
     
     def _refresh_state(self) -> None:
         """Query device and update state."""
         try:
-            # 限制查询频率
+            # Limit query frequency
             current_time = time.time()
             if current_time - self._last_update < self._update_interval:
                 return
@@ -95,13 +95,13 @@ class CozyLifeSwitch(SwitchEntity):
             self._state = self._tcp_client.query()
             self._last_update = current_time
             
-            # 检查状态数据是否有效
+            # Check if state data is valid
             if self._state and isinstance(self._state, dict) and '1' in self._state:
                 self._attr_is_on = self._state.get('1', 0) != 0
                 self._available = True
                 _LOGGER.debug("Switch state refreshed successfully: %s", self._attr_is_on)
             else:
-                # 如果获取状态失败，保持之前的状态，但标记为不可用
+                # If getting state fails, keep previous state but mark as unavailable
                 self._available = False
                 _LOGGER.warning("Failed to get valid state from device, marking as unavailable")
                 
@@ -117,7 +117,7 @@ class CozyLifeSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        # 只在必要时刷新状态
+        # Only refresh state when necessary
         self._refresh_state()
         return self._attr_is_on
     
@@ -134,7 +134,7 @@ class CozyLifeSwitch(SwitchEntity):
             if success:
                 self._attr_is_on = True
                 self._available = True
-                # 控制成功后强制刷新状态
+                # Force refresh state after successful control
                 self._last_update = 0
                 await self.hass.async_add_executor_job(self._refresh_state)
             else:
@@ -153,7 +153,7 @@ class CozyLifeSwitch(SwitchEntity):
             if success:
                 self._attr_is_on = False
                 self._available = True
-                # 控制成功后强制刷新状态
+                # Force refresh state after successful control
                 self._last_update = 0
                 await self.hass.async_add_executor_job(self._refresh_state)
             else:
